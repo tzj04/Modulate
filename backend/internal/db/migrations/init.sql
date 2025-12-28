@@ -1,4 +1,4 @@
--- Enable extensions (good practice, future-proofing)
+-- Enable extensions for future proofing
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =========================
@@ -30,10 +30,16 @@ CREATE TABLE modules (
 -- =========================
 CREATE TABLE topics (
     id BIGSERIAL PRIMARY KEY,
-    title TEXT NOT NULL,
     module_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
+
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+
+    is_deleted BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE,
 
     CONSTRAINT fk_topics_module
         FOREIGN KEY (module_id)
@@ -46,15 +52,22 @@ CREATE TABLE topics (
 );
 
 
+
 -- =========================
 -- posts table
 -- =========================
 CREATE TABLE posts (
     id BIGSERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
     topic_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
+
+    parent_post_id BIGINT NULL,
+
+    content TEXT NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE,
 
     CONSTRAINT fk_posts_topic
         FOREIGN KEY (topic_id)
@@ -63,6 +76,33 @@ CREATE TABLE posts (
 
     CONSTRAINT fk_posts_user
         FOREIGN KEY (user_id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_posts_parent
+        FOREIGN KEY (parent_post_id)
+        REFERENCES posts(id)
+);
+
+
+-- =========================
+-- comments table
+-- =========================
+CREATE TABLE comments (
+    id BIGSERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE,
+
+    CONSTRAINT fk_comments_post
+        FOREIGN KEY (post_id)
+        REFERENCES posts(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_comments_user
+        FOREIGN KEY (user_id)
         REFERENCES users(id)
 );
 
@@ -70,5 +110,7 @@ CREATE TABLE posts (
 -- Indexes for performance
 -- =========================
 CREATE INDEX idx_topics_module_id ON topics(module_id);
+
 CREATE INDEX idx_posts_topic_id ON posts(topic_id);
+CREATE INDEX idx_posts_parent_id ON posts(parent_post_id);
 CREATE INDEX idx_posts_user_id ON posts(user_id);
