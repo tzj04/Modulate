@@ -13,49 +13,108 @@ type PostRepo struct {
 
 func (r *PostRepo) Create(p *models.Post) error {
 	return r.DB.QueryRow(`
-		INSERT INTO posts (topic_id, user_id, parent_post_id, content)
+		INSERT INTO posts (module_id, user_id, title, content)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, created_at`,
-		p.TopicID, p.UserID, p.ParentPostID, p.Content,
+		RETURNING id, created_at
+	`,
+		p.ModuleID,
+		p.UserID,
+		p.Title,
+		p.Content,
 	).Scan(&p.ID, &p.CreatedAt)
 }
 
-func (r *PostRepo) ListThreadByTopic(topicID int64) ([]models.Post, error) {
+
+func (r *PostRepo) GetByID(id int64) (*models.Post, error) {
+	var p models.Post
+
+	err := r.DB.QueryRow(`
+		SELECT
+			id,
+			module_id,
+			user_id,
+			title,
+			content,
+			is_deleted,
+			created_at,
+			updated_at
+		FROM posts
+		WHERE id = $1
+	`, id).Scan(
+		&p.ID,
+		&p.ModuleID,
+		&p.UserID,
+		&p.Title,
+		&p.Content,
+		&p.IsDeleted,
+		&p.CreatedAt,
+		&p.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &p, nil
+}
+
+
+func (r *PostRepo) ListByModule(moduleID int64) ([]models.Post, error) {
 	rows, err := r.DB.Query(`
-		WITH RECURSIVE thread AS (
-			SELECT id, topic_id, user_id, parent_post_id, content, is_deleted, created_at, updated_at
-			FROM posts
-			WHERE topic_id = $1 AND parent_post_id IS NULL
-			UNION ALL
-			SELECT p.id, p.topic_id, p.user_id, p.parent_post_id, p.content, p.is_deleted, p.created_at, p.updated_at
-			FROM posts p
-			JOIN thread t ON p.parent_post_id = t.id
-		)
-		SELECT * FROM thread ORDER BY created_at`, topicID)
+		SELECT
+			id,
+			module_id,
+			user_id,
+			title,
+			content,
+			is_deleted,
+			created_at,
+			updated_at
+		FROM posts
+		WHERE module_id = $1
+		ORDER BY created_at DESC
+	`, moduleID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var posts []models.Post
+	posts := make([]models.Post, 0)
+
 	for rows.Next() {
 		var p models.Post
 		if err := rows.Scan(
-			&p.ID, &p.TopicID, &p.UserID,
-			&p.ParentPostID, &p.Content,
-			&p.IsDeleted, &p.CreatedAt, &p.UpdatedAt,
+			&p.ID,
+			&p.ModuleID,
+			&p.UserID,
+			&p.Title,
+			&p.Content,
+			&p.IsDeleted,
+			&p.CreatedAt,
+			&p.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
 		posts = append(posts, p)
 	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return posts, nil
 }
 
+
 func (r *PostRepo) SoftDelete(id int64) error {
 	_, err := r.DB.Exec(`
-		UPDATE posts SET is_deleted = TRUE, updated_at = $2 WHERE id = $1`,
-		id, time.Now(),
+		UPDATE posts
+		SET is_deleted = TRUE,
+		    updated_at = $2
+		WHERE id = $1
+	`,
+		id,
+		time.Now(),
 	)
 	return err
 }

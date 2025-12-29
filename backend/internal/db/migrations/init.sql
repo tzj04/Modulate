@@ -1,4 +1,4 @@
--- Enable extensions for future proofing
+-- Enable extensions (only keep if you actually plan to use UUIDs)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =========================
@@ -7,28 +7,27 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
+    password TEXT NOT NULL, -- store hashed passwords only
     label TEXT,
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
-
 -- =========================
--- modules table
+-- modules table (acts like subreddits)
 -- =========================
 CREATE TABLE modules (
     id BIGSERIAL PRIMARY KEY,
-    code TEXT NOT NULL,
+    code TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =========================
--- topics table
+-- posts table
 -- =========================
-CREATE TABLE topics (
+CREATE TABLE posts (
     id BIGSERIAL PRIMARY KEY,
     module_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -38,63 +37,34 @@ CREATE TABLE topics (
 
     is_deleted BOOLEAN DEFAULT FALSE,
 
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ,
 
-    CONSTRAINT fk_topics_module
+    CONSTRAINT fk_posts_module
         FOREIGN KEY (module_id)
         REFERENCES modules(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_topics_user
+    CONSTRAINT fk_posts_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
 );
 
-
-
 -- =========================
--- posts table
--- =========================
-CREATE TABLE posts (
-    id BIGSERIAL PRIMARY KEY,
-    topic_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-
-    parent_post_id BIGINT NULL,
-
-    content TEXT NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE,
-
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE,
-
-    CONSTRAINT fk_posts_topic
-        FOREIGN KEY (topic_id)
-        REFERENCES topics(id)
-        ON DELETE CASCADE,
-
-    CONSTRAINT fk_posts_user
-        FOREIGN KEY (user_id)
-        REFERENCES users(id),
-
-    CONSTRAINT fk_posts_parent
-        FOREIGN KEY (parent_post_id)
-        REFERENCES posts(id)
-);
-
-
--- =========================
--- comments table
+-- comments table (hierarchical)
 -- =========================
 CREATE TABLE comments (
     id BIGSERIAL PRIMARY KEY,
-    content TEXT NOT NULL,
     post_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
+
+    parent_comment_id BIGINT NULL,
+
+    content TEXT NOT NULL,
     is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ,
 
     CONSTRAINT fk_comments_post
         FOREIGN KEY (post_id)
@@ -103,14 +73,19 @@ CREATE TABLE comments (
 
     CONSTRAINT fk_comments_user
         FOREIGN KEY (user_id)
-        REFERENCES users(id)
+        REFERENCES users(id),
+
+    CONSTRAINT fk_comments_parent
+        FOREIGN KEY (parent_comment_id)
+        REFERENCES comments(id)
 );
 
 -- =========================
 -- Indexes for performance
 -- =========================
-CREATE INDEX idx_topics_module_id ON topics(module_id);
-
-CREATE INDEX idx_posts_topic_id ON posts(topic_id);
-CREATE INDEX idx_posts_parent_id ON posts(parent_post_id);
+CREATE INDEX idx_posts_module_id ON posts(module_id);
 CREATE INDEX idx_posts_user_id ON posts(user_id);
+
+CREATE INDEX idx_comments_post_id ON comments(post_id);
+CREATE INDEX idx_comments_parent_id ON comments(parent_comment_id);
+CREATE INDEX idx_comments_user_id ON comments(user_id);

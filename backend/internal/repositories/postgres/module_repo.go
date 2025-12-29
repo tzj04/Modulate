@@ -15,7 +15,11 @@ func (r *ModuleRepo) Create(m *models.Module) error {
 		INSERT INTO modules (code, title, description)
 		VALUES ($1, $2, $3)
 		RETURNING id, created_at
-	`, m.Code, m.Title, m.Description).Scan(&m.ID, &m.CreatedAt)
+	`,
+		m.Code,
+		m.Title,
+		m.Description,
+	).Scan(&m.ID, &m.CreatedAt)
 }
 
 func (r *ModuleRepo) ListAll() ([]models.Module, error) {
@@ -29,7 +33,8 @@ func (r *ModuleRepo) ListAll() ([]models.Module, error) {
 	}
 	defer rows.Close()
 
-	var modules []models.Module
+	modules := make([]models.Module, 0)
+
 	for rows.Next() {
 		var m models.Module
 		if err := rows.Scan(
@@ -42,6 +47,10 @@ func (r *ModuleRepo) ListAll() ([]models.Module, error) {
 			return nil, err
 		}
 		modules = append(modules, m)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return modules, nil

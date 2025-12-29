@@ -18,24 +18,32 @@ func TestCreateModule(t *testing.T) {
 
 	repo := &ModuleRepo{DB: db}
 
-	module := &models.Module{Code: "CS1010", Title: "Programming", Description: "Intro"}
+	module := &models.Module{
+		Code:        "CS1101S",
+		Title:       "Programming Methodology",
+		Description: "Intro to programming",
+	}
 
-	// Setup expected query and returned row
 	mock.ExpectQuery(`INSERT INTO modules`).
 		WithArgs(module.Code, module.Title, module.Description).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(1, time.Now()))
+		WillReturnRows(
+			sqlmock.NewRows([]string{"id", "created_at"}).
+				AddRow(1, time.Now()),
+		)
 
-	// Call method
-	err = repo.Create(module)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+	if err := repo.Create(module); err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// Ensure all expectations were met
+	if module.ID != 1 {
+		t.Errorf("expected module ID 1, got %d", module.ID)
+	}
+
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %v", err)
+		t.Errorf("unfulfilled expectations: %v", err)
 	}
 }
+
 
 // TestListAllModules tests the ListAll method of ModuleRepo
 func TestListAllModules(t *testing.T) {
@@ -47,15 +55,19 @@ func TestListAllModules(t *testing.T) {
 
 	repo := &ModuleRepo{DB: db}
 
-	// Setup expected rows to be returned
-	rows := sqlmock.NewRows([]string{"id", "code", "title", "description", "created_at"}).
-		AddRow(1, "CS1010", "Programming", "Intro", time.Now()).
-		AddRow(2, "CS1020", "Data Structures", "DS Intro", time.Now())
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"code",
+		"title",
+		"description",
+		"created_at",
+	}).
+		AddRow(1, "CS1101S", "Programming Methodology", "Intro to programming", time.Now()).
+		AddRow(2, "CS1231S", "Discrete Structures", "Discrete Math for Computing", time.Now())
 
 	mock.ExpectQuery(`SELECT id, code, title, description, created_at FROM modules`).
 		WillReturnRows(rows)
 
-	// Call method
 	modules, err := repo.ListAll()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -65,8 +77,7 @@ func TestListAllModules(t *testing.T) {
 		t.Errorf("expected 2 modules, got %d", len(modules))
 	}
 
-	// Ensure all expectations were met
 	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %v", err)
+		t.Errorf("unfulfilled expectations: %v", err)
 	}
 }

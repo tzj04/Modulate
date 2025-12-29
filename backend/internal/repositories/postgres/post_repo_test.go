@@ -8,7 +8,7 @@ import (
 	"modulate/backend/internal/models"
 )
 
-// TestCreatePost tests the Create method
+// TestCreateTopic tests the Create method
 func TestCreatePost(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -19,19 +19,30 @@ func TestCreatePost(t *testing.T) {
 	repo := &PostRepo{DB: db}
 
 	post := &models.Post{
-		TopicID:      1,
-		UserID:       2,
-		ParentPostID: nil,
-		Content:      "Hello world",
+		ModuleID: 1,
+		UserID:   2,
+		Title:    "New Post",
+		Content:  "Post content",
 	}
 
 	mock.ExpectQuery(`INSERT INTO posts`).
-		WithArgs(post.TopicID, post.UserID, post.ParentPostID, post.Content).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(1, time.Now()))
+		WithArgs(
+			post.ModuleID,
+			post.UserID,
+			post.Title,
+			post.Content,
+		).
+		WillReturnRows(
+			sqlmock.NewRows([]string{"id", "created_at"}).
+				AddRow(1, time.Now()),
+		)
 
-	err = repo.Create(post)
-	if err != nil {
+	if err := repo.Create(post); err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if post.ID != 1 {
+		t.Errorf("expected post ID 1, got %d", post.ID)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -39,8 +50,8 @@ func TestCreatePost(t *testing.T) {
 	}
 }
 
-// TestListThreadByTopic tests ListThreadByTopic
-func TestListThreadByTopic(t *testing.T) {
+// TestGetByID tests GetByID
+func TestGetPostByID(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
@@ -49,15 +60,67 @@ func TestListThreadByTopic(t *testing.T) {
 
 	repo := &PostRepo{DB: db}
 
-	topicID := int64(1)
+	postID := int64(1)
 
-	rows := sqlmock.NewRows([]string{"id", "topic_id", "user_id", "parent_post_id", "content", "is_deleted", "created_at", "updated_at"}).
-		AddRow(1, topicID, 2, nil, "Parent post", false, time.Now(), nil).
-		AddRow(2, topicID, 3, 1, "Child post", false, time.Now(), nil)
+	mock.ExpectQuery(`SELECT\s+id,\s+module_id,\s+user_id,\s+title,\s+content,\s+is_deleted,\s+created_at,\s+updated_at\s+FROM posts\s+WHERE id = \$1`).
+		WithArgs(postID).
+		WillReturnRows(
+			sqlmock.NewRows([]string{
+				"id",
+				"module_id",
+				"user_id",
+				"title",
+				"content",
+				"is_deleted",
+				"created_at",
+				"updated_at",
+			}).AddRow(postID, 1, 2, "New Post", "Post content", false, time.Now(), nil),
+		)
 
-	mock.ExpectQuery(`WITH RECURSIVE thread`).WithArgs(topicID).WillReturnRows(rows)
+	post, err := repo.GetByID(postID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	posts, err := repo.ListThreadByTopic(topicID)
+	if post.ID != postID {
+		t.Errorf("expected ID %d, got %d", postID, post.ID)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("unfulfilled expectations: %v", err)
+	}
+}
+
+
+// TestListByModule tests ListByModule
+func TestListPostsByModule(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+
+	repo := &PostRepo{DB: db}
+	moduleID := int64(1)
+
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"module_id",
+		"user_id",
+		"title",
+		"content",
+		"is_deleted",
+		"created_at",
+		"updated_at",
+	}).
+		AddRow(1, moduleID, 2, "Post 1", "Content 1", false, time.Now(), nil).
+		AddRow(2, moduleID, 3, "Post 2", "Content 2", false, time.Now(), nil)
+
+	mock.ExpectQuery(`SELECT\s+id,\s+module_id,\s+user_id,\s+title,\s+content,\s+is_deleted,\s+created_at,\s+updated_at\s+FROM posts\s+WHERE module_id = \$1`).
+		WithArgs(moduleID).
+		WillReturnRows(rows)
+
+	posts, err := repo.ListByModule(moduleID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -83,12 +146,11 @@ func TestSoftDeletePost(t *testing.T) {
 
 	postID := int64(1)
 
-	mock.ExpectExec(`UPDATE posts SET is_deleted = TRUE`).
+	mock.ExpectExec(`UPDATE posts`).
 		WithArgs(postID, sqlmock.AnyArg()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err = repo.SoftDelete(postID)
-	if err != nil {
+	if err := repo.SoftDelete(postID); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
