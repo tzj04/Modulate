@@ -1,0 +1,100 @@
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"modulate/backend/internal/models"
+	"modulate/backend/internal/repositories"
+)
+
+type CommentHandler struct {
+	Repo repositories.CommentRepository
+}
+
+func NewCommentHandler(repo repositories.CommentRepository) *CommentHandler {
+	return &CommentHandler{Repo: repo}
+}
+
+type createCommentRequest struct {
+	Content  string `json:"content"`
+	UserID   int64  `json:"user_id"`
+	ParentID *int64 `json:"parent_id,omitempty"`
+}
+
+func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	postID, err := strconv.ParseInt(vars["postID"], 10, 64)
+	if err != nil {
+		http.Error(w, "invalid post id", http.StatusBadRequest)
+		return
+	}
+
+	var req createCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Content == "" {
+		http.Error(w, "content cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	comment := &models.Comment{
+		PostID:          postID,
+		UserID:          req.UserID,
+		ParentCommentID: req.ParentID,
+		Content:         req.Content,
+	}
+
+	if err := h.Repo.Create(comment); err != nil {
+		http.Error(w, "failed to create comment", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(comment)
+}
+
+func (h *CommentHandler) Thread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	postID, err := strconv.ParseInt(vars["postID"], 10, 64)
+	if err != nil {
+		http.Error(w, "invalid post id", http.StatusBadRequest)
+		return
+	}
+
+	comments, err := h.Repo.ListThreadByPost(postID)
+	if err != nil {
+		http.Error(w, "failed to fetch comments", http.StatusInternalServerError)
+		return
+	}
+
+	tree := repositories.BuildCommentTree(comments)
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(tree)
+}
+
+func (h *CommentHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	commentID, err := strconv.ParseInt(vars["commentID"], 10, 64)
+	if err != nil {
+		http.Error(w, "invalid comment id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.Repo.SoftDelete(commentID); err != nil {
+		http.Error(w, "failed to delete comment", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
