@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"modulate/backend/internal/models"
 	"modulate/backend/internal/repositories"
+	"modulate/backend/internal/middleware"
 )
 
 type CommentHandler struct {
@@ -44,9 +45,10 @@ func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := r.Context().Value(middleware.UserIDKey).(int64)
 	comment := &models.Comment{
 		PostID:          postID,
-		UserID:          req.UserID,
+		UserID:          userID,
 		ParentCommentID: req.ParentID,
 		Content:         req.Content,
 	}
