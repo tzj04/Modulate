@@ -1,4 +1,3 @@
--- Enable extensions (only keep if you actually plan to use UUIDs)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =========================
