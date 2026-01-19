@@ -6,6 +6,6 @@ export interface Post {
   content: string;
   is_deleted: boolean;
   created_at: string;
-  updated_at: string;
-  username?: string; // Often joined from the users table in the backend
+  updated_at: string | null;
+  username?: string; // joined from the users table in the backend
 }
