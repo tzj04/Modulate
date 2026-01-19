@@ -3,10 +3,10 @@ package models
 import "time"
 
 type User struct {
-	ID       int64
-	Username string
-	Password string
-	Label    *string // Label is an optional, self-declared user role (e.g. "Student", "Professor").
-	IsDeleted bool
-	CreatedAt time.Time
+    ID        int64     `json:"id"`
+    Username  string    `json:"username"`
+    Password  string    `json:"-"`
+    Label     *string   `json:"label"`
+    IsDeleted bool      `json:"is_deleted"`
+    CreatedAt time.Time `json:"created_at"`
 }

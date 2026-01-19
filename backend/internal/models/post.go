@@ -3,15 +3,14 @@ package models
 import "time"
 
 type Post struct {
-	ID        int64
-	ModuleID  int64
-	UserID    int64
+	ID        int64     `json:"id"`
+    ModuleID  int64     `json:"module_id"`
+    UserID    int64     `json:"user_id"`
 
-	Title     string
-	Content   string
+	Title     string    `json:"title"`
+    Content   string    `json:"content"`
 
-	IsDeleted bool
-
-	CreatedAt time.Time
-	UpdatedAt *time.Time
+	IsDeleted bool      `json:"is_deleted"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt *time.Time `json:"updated_at"`
 }
