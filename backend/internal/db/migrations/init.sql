@@ -20,6 +20,7 @@ CREATE TABLE modules (
     code TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     description TEXT,
+    faculty TEXT,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
