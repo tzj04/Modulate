@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# .json from NUSmods
+nusmods_data_processing/*.json
 # PDF File
 *.pdf
 
@@ -13,6 +15,7 @@
 *.userosscache
 *.sln.docstates
 *.env
+*.venv
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
