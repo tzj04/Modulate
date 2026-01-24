@@ -25,63 +25,39 @@ func (r *CommentRepo) Create(c *models.Comment) error {
 
 
 func (r *CommentRepo) ListThreadByPost(postID int64) ([]models.Comment, error) {
-	rows, err := r.DB.Query(`
-		WITH RECURSIVE thread AS (
-			SELECT
-				id,
-				post_id,
-				user_id,
-				parent_comment_id,
-				content,
-				is_deleted,
-				created_at,
-				updated_at
-			FROM comments
-			WHERE post_id = $1
-			  AND parent_comment_id IS NULL
+    // Initialize as empty slice so JSON is [] instead of null
+    comments := make([]models.Comment, 0)
 
-			UNION ALL
+    // Query with JOIN
+    rows, err := r.DB.Query(`
+        SELECT 
+            c.id, c.post_id, c.user_id, c.parent_comment_id, 
+            c.content, c.is_deleted, c.created_at, c.updated_at,
+            u.username
+        FROM comments c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.post_id = $1
+        ORDER BY c.created_at ASC
+    `, postID)
+    
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
 
-			SELECT
-				c.id,
-				c.post_id,
-				c.user_id,
-				c.parent_comment_id,
-				c.content,
-				c.is_deleted,
-				c.created_at,
-				c.updated_at
-			FROM comments c
-			JOIN thread t ON c.parent_comment_id = t.id
-		)
-		SELECT *
-		FROM thread
-		ORDER BY created_at ASC
-	`, postID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+    for rows.Next() {
+        var c models.Comment
+        if err := rows.Scan(
+            &c.ID, &c.PostID, &c.UserID, &c.ParentCommentID, 
+            &c.Content, &c.IsDeleted, &c.CreatedAt, &c.UpdatedAt,
+            &c.Username,
+        ); err != nil {
+            return nil, err
+        }
+        comments = append(comments, c)
+    }
 
-	var comments []models.Comment
-	for rows.Next() {
-		var c models.Comment
-		if err := rows.Scan(
-			&c.ID,
-			&c.PostID,
-			&c.UserID,
-			&c.ParentCommentID,
-			&c.Content,
-			&c.IsDeleted,
-			&c.CreatedAt,
-			&c.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		comments = append(comments, c)
-	}
-
-	return comments, nil
+    return comments, nil
 }
 
 

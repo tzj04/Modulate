@@ -8,6 +8,7 @@ type Comment struct {
     UserID          int64      `json:"user_id"`
     ParentCommentID *int64     `json:"parent_comment_id"`
 
+    Username        string     `json:"username"`
     Content         string     `json:"content"`
 
     IsDeleted       bool       `json:"is_deleted"`
