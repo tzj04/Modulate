@@ -5,8 +5,13 @@
 
 # .json from NUSmods
 nusmods_data_processing/*.json
+
 # PDF File
 *.pdf
+
+# tool versions & ds_store
+.tool-versions
+.DS_Store
 
 # User-specific files
 *.rsuser
