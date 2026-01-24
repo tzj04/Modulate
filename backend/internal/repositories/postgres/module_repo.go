@@ -55,3 +55,30 @@ func (r *ModuleRepo) ListAll() ([]models.Module, error) {
 
 	return modules, nil
 }
+
+func (r *ModuleRepo) GetByID(id int) (*models.Module, error) {
+    var m models.Module
+    
+    err := r.DB.QueryRow(`
+        SELECT id, code, title, description, created_at
+        FROM modules
+        WHERE id = $1
+    `, id).Scan(
+        &m.ID,
+        &m.Code,
+        &m.Title,
+        &m.Description,
+        &m.CreatedAt,
+    )
+
+    if err != nil {
+        if err == sql.ErrNoRows {
+            // If module doesn't exist
+            return nil, err 
+        }
+        // If its a database error (connection, syntax, etc.)
+        return nil, err
+    }
+
+    return &m, nil
+}
