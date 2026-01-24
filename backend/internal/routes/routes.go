@@ -12,6 +12,7 @@ func NewRouter(
     moduleHandler *handlers.ModuleHandler,
     postHandler *handlers.PostHandler,
     commentHandler *handlers.CommentHandler,
+    userHandler *handlers.UserHandler,
 ) *mux.Router {
 
     router := mux.NewRouter()
@@ -28,14 +29,24 @@ func NewRouter(
     // Modules
     router.HandleFunc("/modules", moduleHandler.List).
         Methods("GET")
+    router.HandleFunc("/modules/{id}", moduleHandler.GetByID).
+        Methods("GET")
 
     // Posts
     router.HandleFunc("/modules/{moduleID}/posts", postHandler.ListByModule).
+        Methods("GET")
+    router.HandleFunc("/posts/{postID}", postHandler.GetByID).
         Methods("GET")
 
     // Comments
     router.HandleFunc("/posts/{postID}/comments/thread", commentHandler.Thread).
         Methods("GET")
+
+    // --------------------
+    // Authentication
+    // --------------------
+    router.HandleFunc("/auth/register", userHandler.Register).Methods("POST")
+    router.HandleFunc("/auth/login", userHandler.Login).Methods("POST")
 
     // --------------------
     // Protected (write)
