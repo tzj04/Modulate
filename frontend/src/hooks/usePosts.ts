@@ -1,36 +1,34 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { postApi } from "../api/posts";
 import { Post } from "../types/post";
 
 export const usePosts = (moduleId: number | undefined) => {
-  // 1. Initialize as an empty array [] so .map() doesn't break
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // If no moduleId is provided, stop loading and return
+  // Define fetchPosts outside so it can be reused/returned
+  const fetchPosts = useCallback(async () => {
     if (moduleId === undefined || isNaN(moduleId)) {
       setLoading(false);
       return;
     }
 
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        // 2. Use the correct API method that returns Post[]
-        const data = await postApi.getByModule(moduleId);
-        setPosts(data);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || "Failed to load posts");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
+    try {
+      setLoading(true);
+      const data = await postApi.getByModule(moduleId);
+      setPosts(data || []); // Ensure there's always an array
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to load posts");
+    } finally {
+      setLoading(false);
+    }
   }, [moduleId]);
 
-  return { posts, loading, error };
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  return { posts, loading, error, refresh: fetchPosts };
 };

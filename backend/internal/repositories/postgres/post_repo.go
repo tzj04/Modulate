@@ -2,7 +2,6 @@ package postgres
 
 import (
     "database/sql"
-    "time"
 
     "modulate/backend/internal/models"
 )
@@ -22,6 +21,24 @@ func (r *PostRepo) Create(p *models.Post) error {
         p.Title,
         p.Content,
     ).Scan(&p.ID, &p.CreatedAt)
+}
+
+func (r *PostRepo) Update(id int64, userID int64, title string, content string) error {
+    result, err := r.DB.Exec(`
+        UPDATE posts 
+        SET title = $1, content = $2, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $3 AND user_id = $4`, // Ensure only the owner can edit
+        title, content, id, userID,
+    )
+    if err != nil {
+        return err
+    }
+
+    rowsAffected, _ := result.RowsAffected()
+    if rowsAffected == 0 {
+        return sql.ErrNoRows // Means either post doesn't exist or user doesn't own it
+    }
+    return nil
 }
 
 func (r *PostRepo) GetByID(id int64) (*models.Post, error) {
@@ -71,8 +88,20 @@ func (r *PostRepo) ListByModule(moduleID int64) ([]models.Post, error) {
 }
 
 func (r *PostRepo) SoftDelete(id int64) error {
-    _, err := r.DB.Exec(`
-        UPDATE posts SET is_deleted = TRUE, updated_at = $2 WHERE id = $1
-    `, id, time.Now())
-    return err
+    query := `
+        UPDATE posts 
+        SET title = '[Deleted]', 
+            content = '[This post has been removed by the author]', 
+            is_deleted = true 
+        WHERE id = $1`
+    result, err := r.DB.Exec(query, id)
+    if err != nil {
+        return err
+    }
+
+    rows, _ := result.RowsAffected()
+    if rows == 0 {
+        return sql.ErrNoRows
+    }
+    return nil
 }

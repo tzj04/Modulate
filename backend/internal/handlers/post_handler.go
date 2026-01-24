@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"database/sql"
 
 	"github.com/gorilla/mux"
 	"modulate/backend/internal/middleware"
@@ -61,6 +62,50 @@ func (h *PostHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(post)
+}
+
+func (h *PostHandler) Update(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    postID, _ := strconv.ParseInt(vars["postID"], 10, 64)
+    userID := r.Context().Value(middleware.UserIDKey).(int64)
+
+    var req struct {
+        Title   string `json:"title"`
+        Content string `json:"content"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid request", http.StatusBadRequest)
+        return
+    }
+
+    if err := h.Repo.Update(postID, userID, req.Title, req.Content); err != nil {
+        if err == sql.ErrNoRows {
+            http.Error(w, "Unauthorized or post not found", http.StatusForbidden)
+        } else {
+            http.Error(w, "Update failed", http.StatusInternalServerError)
+        }
+        return
+    }
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (h *PostHandler) Delete(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    // Match the "postID" key from route
+    postID, err := strconv.ParseInt(vars["postID"], 10, 64)
+    if err != nil {
+        http.Error(w, "Invalid post ID", http.StatusBadRequest)
+        return
+    }
+
+    if err := h.Repo.SoftDelete(postID); err != nil {
+        http.Error(w, "Delete failed: "+err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *PostHandler) ListByModule(w http.ResponseWriter, r *http.Request) {
