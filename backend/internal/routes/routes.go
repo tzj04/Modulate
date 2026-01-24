@@ -49,6 +49,10 @@ func NewRouter(
         Methods("POST")
     router.HandleFunc("/auth/login", userHandler.Login).
         Methods("POST")
+    router.HandleFunc("/auth/refresh", userHandler.Refresh).
+        Methods("POST")
+    router.HandleFunc("/auth/logout", userHandler.Logout).
+        Methods("POST")
 
     // --------------------
     // Protected (write)

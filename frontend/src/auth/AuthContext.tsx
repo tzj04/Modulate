@@ -1,19 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-
-interface User {
-  id: number;
-  username: string;
-  label: string | null;
-  is_deleted: boolean;
-  created_at: string;
-}
+import { client } from "../api/client";
+import { User } from "../types/user";
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (token: string, user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -27,15 +22,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("token"),
   );
+  const [isLoading, setIsLoading] = useState(true);
 
-  // On mount, could also verify the token with the backend here
-  // TODO token expiry handling
   useEffect(() => {
+    const handleStorageChange = () => {
+      const newToken = localStorage.getItem("token");
+      const savedUser = localStorage.getItem("user");
+
+      setToken(newToken);
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else {
+        setUser(null);
+      }
+    };
+
+    // Listen for changes from other tabs
+    window.addEventListener("storage", handleStorageChange);
+
+    // Initial Load sync
     const savedUser = localStorage.getItem("user");
-    if (savedUser && token) {
+    const savedToken = localStorage.getItem("token");
+    if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
+      setToken(savedToken);
     }
-  }, [token]);
+    setIsLoading(false);
+
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -44,16 +59,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem("user", JSON.stringify(newUser));
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const logout = async () => {
+    try {
+      // Hits /api/auth/logout to clear the HttpOnly cookie
+      await client("/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // Always clear local state
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, isAuthenticated: !!token }}
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        isAuthenticated: !!token,
+        isLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>
