@@ -3,15 +3,17 @@ package main
 import (
 	"log"
 	"net/http"
-    "os" // Needed to read environment variables
-    "github.com/joho/godotenv"
+	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
+
+	"modulate/backend/internal/db"
 	"modulate/backend/internal/handlers"
+	"modulate/backend/internal/middleware"
 	"modulate/backend/internal/repositories/postgres"
 	"modulate/backend/internal/routes"
-	"modulate/backend/internal/db"
-    "modulate/backend/internal/middleware"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -37,14 +39,21 @@ func main() {
     moduleRepo := &postgres.ModuleRepo{DB: db.DB}
     postRepo := &postgres.PostRepo{DB: db.DB}
     commentRepo := &postgres.CommentRepo{DB: db.DB}
+    userRepo := &postgres.UserRepo{DB: db.DB}
 
     // Initialize handlers
     moduleHandler := handlers.NewModuleHandler(moduleRepo)
     postHandler := handlers.NewPostHandler(postRepo)
     commentHandler := handlers.NewCommentHandler(commentRepo)
+    userHandler := handlers.NewUserHandler(userRepo)
 
     // Initialize router
-    router := routes.NewRouter(moduleHandler, postHandler, commentHandler)
+    router := routes.NewRouter(
+        moduleHandler, 
+        postHandler, 
+        commentHandler,
+        userHandler,
+    )
     handler := middleware.CORSMiddleware(router)
 
     // Start server
