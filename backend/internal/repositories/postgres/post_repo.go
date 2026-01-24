@@ -1,9 +1,9 @@
 package postgres
 
 import (
-    "database/sql"
+	"database/sql"
 
-    "modulate/backend/internal/models"
+	"modulate/backend/internal/models"
 )
 
 type PostRepo struct {
@@ -91,7 +91,7 @@ func (r *PostRepo) SoftDelete(id int64) error {
     query := `
         UPDATE posts 
         SET title = '[Deleted]', 
-            content = '[This post has been removed by the author]', 
+            content = '[This post has been deleted by the author]', 
             is_deleted = true 
         WHERE id = $1`
     result, err := r.DB.Exec(query, id)
