@@ -54,12 +54,21 @@ body {
 }
 
 .navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: var(--nus-orange);
   font-weight: 800;
   font-size: 1.4rem;
   text-decoration: none;
   letter-spacing: -0.5px;
   flex-shrink: 0;
+}
+
+.navbar-logo-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .navbar-search-form {
@@ -192,12 +201,17 @@ body {
 }
 
 .navbar-right,
-.auth-links,
 .user-profile {
   display: flex;
   align-items: center;
   gap: 20px;
   flex-shrink: 0;
+}
+
+.auth-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .navbar-menu-wrapper {
@@ -257,6 +271,57 @@ body {
   object-fit: contain;
 }
 
+.login-link {
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.login-link,
+.register-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 6px;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  height: 40px;
+  min-width: 100px;
+}
+
+.login-link {
+  color: var(--white);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+}
+
+.login-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--white);
+  transform: translateY(-1px);
+}
+
+.register-button {
+  background-color: var(--nus-orange);
+  color: var(--white);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+
+.register-button:hover {
+  background-color: var(--nus-orange-hover);
+  transform: translateY(-1px);
+}
+
 /* ==========================================================================
    3. GLOBAL COMPONENTS
    ========================================================================== */
@@ -271,7 +336,6 @@ body {
 
 button,
 .nav-button,
-.register-button,
 .auth-button,
 .save-btn,
 .comment-submit-btn {
@@ -285,14 +349,12 @@ button,
   padding: 10px 20px;
 }
 
-.nav-button,
-.register-button {
+.nav-button {
   background-color: var(--nus-orange);
   color: var(--white);
 }
 
-.nav-button:hover,
-.register-button:hover {
+.nav-button:hover {
   background-color: var(--nus-orange-hover);
 }
 
@@ -921,4 +983,100 @@ button,
 .load-more-btn:hover {
   background-color: var(--nus-blue);
   color: var(--white);
+}
+
+/* ==========================================================================
+   9. AUTH PAGES (Login & Register)
+   ========================================================================== */
+
+/* Centering the card on the page */
+.auth-container {
+  min-height: calc(100vh - 80px); /* Adjusts for navbar height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* The Card itself */
+.auth-card {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  border-top: 6px solid var(--nus-orange); /* High visibility NUS Orange strip */
+  text-align: center;
+}
+
+.auth-title {
+  color: var(--nus-blue);
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.auth-subtitle {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+/* Form Layout */
+.auth-form {
+  text-align: left; /* Keep labels aligned left */
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-dark);
+}
+
+/* Re-using your form-input but making it more prominent */
+.auth-form .form-input {
+  margin-bottom: 20px;
+  border: 2px solid var(--border-color); /* Thicker border */
+  font-size: 1rem;
+}
+
+.auth-form .form-input:focus {
+  border-color: var(--nus-blue);
+  box-shadow: 0 0 0 4px rgba(0, 61, 124, 0.1);
+}
+
+/* High Visibility Login Button */
+.auth-button {
+  width: 100%;
+  background-color: var(--nus-blue);
+  color: var(--white);
+  padding: 14px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 10px;
+}
+
+.auth-button:hover {
+  background-color: var(--nus-blue-dark);
+  transform: translateY(-1px);
+}
+
+/* Footer Link */
+.auth-footer {
+  margin-top: 25px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.auth-footer a {
+  color: var(--nus-orange);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
 }

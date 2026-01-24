@@ -108,7 +108,12 @@ export const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
-          Modulate
+          <img
+            src="/images/home_icon.png"
+            alt="Home"
+            className="navbar-logo-icon"
+          />
+          <span>Modulate</span>
         </Link>
 
         <div className="navbar-right">
@@ -121,7 +126,7 @@ export const Navbar = () => {
                 title="Search modules"
               >
                 <img
-                  src="../../public/images/search_icon.webp"
+                  src="images/search_icon.webp"
                   alt="Search"
                   className="search-icon-img"
                 />
