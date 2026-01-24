@@ -23,8 +23,6 @@ func (h *PostHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Get UserID from Context, key defined in middleware
 	userID, ok := r.Context().Value(middleware.UserIDKey).(int64)
 	if !ok {
-		// If this fails, it's likely because the key/type mismatch 
-		// or the route isn't wrapped by AuthMiddleware
 		http.Error(w, "Unauthorized: could not get user from context", http.StatusUnauthorized)
 		return
 	}
