@@ -45,8 +45,10 @@ func NewRouter(
     // --------------------
     // Authentication
     // --------------------
-    router.HandleFunc("/auth/register", userHandler.Register).Methods("POST")
-    router.HandleFunc("/auth/login", userHandler.Login).Methods("POST")
+    router.HandleFunc("/auth/register", userHandler.Register).
+        Methods("POST")
+    router.HandleFunc("/auth/login", userHandler.Login).
+        Methods("POST")
 
     // --------------------
     // Protected (write)
@@ -54,14 +56,21 @@ func NewRouter(
     api := router.PathPrefix("/api").Subrouter()
     api.Use(middleware.AuthMiddleware)
 
-    // Posts - Grouped together
-    api.HandleFunc("/modules/{moduleID}/posts", postHandler.Create).Methods("POST", "OPTIONS")
-    api.HandleFunc("/posts/{postID}", postHandler.Update).Methods("PUT", "OPTIONS") // Fixed this line
-    api.HandleFunc("/posts/{postID}", postHandler.Delete).Methods("DELETE", "OPTIONS") // This will now work
+    // Posts
+    api.HandleFunc("/modules/{moduleID}/posts", postHandler.Create).
+        Methods("POST", "OPTIONS")
+    api.HandleFunc("/posts/{postID}", postHandler.Update).
+        Methods("PUT", "OPTIONS")
+    api.HandleFunc("/posts/{postID}", postHandler.Delete).
+        Methods("DELETE", "OPTIONS")
 
     // Comments
-    api.HandleFunc("/posts/{postID}/comments", commentHandler.Create).Methods("POST", "OPTIONS")
-    api.HandleFunc("/comments/{commentID}", commentHandler.Delete).Methods("DELETE", "OPTIONS")
+    api.HandleFunc("/posts/{postID}/comments", commentHandler.Create).
+        Methods("POST", "OPTIONS")
+    api.HandleFunc("/comments/{commentID}", commentHandler.Update).
+        Methods("PUT", "OPTIONS")
+    api.HandleFunc("/comments/{commentID}", commentHandler.Delete).
+        Methods("DELETE", "OPTIONS")
 
     // --------------------
     // Health

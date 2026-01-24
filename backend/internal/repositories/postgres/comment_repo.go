@@ -61,14 +61,24 @@ func (r *CommentRepo) ListThreadByPost(postID int64) ([]models.Comment, error) {
 }
 
 
-func (r *CommentRepo) SoftDelete(id int64) error {
-	_, err := r.DB.Exec(`
-		UPDATE comments
-		SET is_deleted = TRUE,
-		    updated_at = $2
-		WHERE id = $1`,
-		id,
-		time.Now(),
-	)
-	return err
+func (r *CommentRepo) Update(id int64, userID int64, content string) error {
+    _, err := r.DB.Exec(`
+        UPDATE comments 
+        SET content = $1, updated_at = $2 
+        WHERE id = $3 AND user_id = $4 AND is_deleted = FALSE`,
+        content, time.Now(), id, userID,
+    )
+    return err
+}
+
+func (r *CommentRepo) SoftDelete(id int64, userID int64) error {
+    _, err := r.DB.Exec(`
+        UPDATE comments
+        SET is_deleted = TRUE,
+            content = '[Comment deleted by user]',
+            updated_at = $1
+        WHERE id = $2 AND user_id = $3`,
+        time.Now(), id, userID,
+    )
+    return err
 }

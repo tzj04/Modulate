@@ -11,4 +11,12 @@ export const commentApi = {
     postId: number,
     data: { content: string; parent_comment_id: number | null },
   ) => client<Comment>(`/api/posts/${postId}/comments`, { body: data }),
+
+  // Update an existing comment
+  update: (commentId: number, content: string) =>
+    client(`/api/comments/${commentId}`, { method: "PUT", body: { content } }),
+
+  // Soft delete a comment
+  delete: (commentId: number) =>
+    client(`/api/comments/${commentId}`, { method: "DELETE" }),
 };

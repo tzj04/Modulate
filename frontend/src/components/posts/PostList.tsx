@@ -17,22 +17,25 @@ export const PostList = ({ posts }: { posts: any[] }) => {
         <div
           key={post.id}
           className="post-card"
-          // This tells React to go to the PostDetail page when clicked
           onClick={() => navigate(`/posts/${post.id}`)}
           style={{ cursor: "pointer" }} // Changes mouse to a hand icon
         >
           <div className="post-header">
-            <span>
-              Posted by{" "}
-              <span className="post-author">{post.username || "Unknown"}</span>
-            </span>
-            <span>
+            <div>
+              <span>
+                Posted by{" "}
+                <span className="post-author">
+                  {post.username || "Unknown"}
+                </span>
+              </span>
+            </div>
+            <div className="post-date-right">
               {new Date(post.created_at).toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
               })}
-            </span>
+            </div>
           </div>
           <h3 className="post-title">{post.title}</h3>
           {/* Use a snippet here so the card doesn't get too long */}

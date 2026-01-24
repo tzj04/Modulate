@@ -120,26 +120,6 @@ export const PostDetail = () => {
       </button>
 
       <article className="post-article" style={{ position: "relative" }}>
-        {/* TOP RIGHT MENU - Author Only */}
-        {user?.id === post.user_id && !isEditing && !isDeleted && (
-          <div className="post-options-wrapper" ref={menuRef}>
-            <button
-              className="kebab-btn"
-              onClick={() => setShowMenu(!showMenu)}
-            >
-              ⋮
-            </button>
-            {showMenu && (
-              <div className="post-dropdown">
-                <button onClick={handleStartEdit}>Edit Post</button>
-                <button className="delete-btn-danger" onClick={handleDelete}>
-                  Delete Post
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
         {isEditing ? (
           <div className="edit-form">
             <input
@@ -166,12 +146,59 @@ export const PostDetail = () => {
           </div>
         ) : (
           <>
-            <h1 className={isDeleted ? "post-title deleted" : "post-title"}>
-              {post.title}
-            </h1>
-            <div className="post-meta">
-              {/* Hide username if deleted, or keep it based on preference */}
-              {isDeleted ? "Post deleted" : `Posted by ${post.username}`}
+            <div className="post-header-wrapper">
+              <div>
+                <div className="post-meta">
+                  {/* Hide username if deleted, or keep it based on preference */}
+                  {isDeleted ? "Post deleted" : `Posted by ${post.username}`}
+                  {isEdited && <span className="edited-tag">(edited)</span>}
+                </div>
+                <h1 className={isDeleted ? "post-title deleted" : "post-title"}>
+                  {post.title}
+                </h1>
+              </div>
+              <div className="post-header-right">
+                <div className="post-date">
+                  {new Date(post.created_at).toLocaleDateString()}
+                </div>
+                {/* TOP RIGHT MENU - Author Only */}
+                {user?.id === post.user_id && !isDeleted && (
+                  <div className="post-options-wrapper" ref={menuRef}>
+                    <button
+                      className="kebab-btn"
+                      onClick={() => setShowMenu(!showMenu)}
+                    >
+                      ⋮
+                    </button>
+                    {showMenu && (
+                      <div className="post-dropdown">
+                        <button
+                          onClick={handleStartEdit}
+                          className="dropdown-btn-with-icon"
+                        >
+                          <img
+                            src="/images/edit_logo.png"
+                            alt="edit"
+                            className="dropdown-icon"
+                          />
+                          Edit Post
+                        </button>
+                        <button
+                          className="delete-btn-danger dropdown-btn-with-icon"
+                          onClick={handleDelete}
+                        >
+                          <img
+                            src="/images/delete_logo_red.png"
+                            alt="delete"
+                            className="dropdown-icon"
+                          />
+                          Delete Post
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div
               className={
@@ -204,7 +231,11 @@ export const PostDetail = () => {
         {commentsLoading ? (
           <p>Loading comments...</p>
         ) : (
-          <CommentList comments={comments} onReplySubmit={handlePostComment} />
+          <CommentList
+            comments={comments}
+            onReplySubmit={handlePostComment}
+            refreshThread={refreshComments}
+          />
         )}
       </section>
     </div>

@@ -87,18 +87,34 @@ func (h *CommentHandler) Thread(w http.ResponseWriter, r *http.Request) {
     _ = json.NewEncoder(w).Encode(comments)
 }
 
+func (h *CommentHandler) Update(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    commentID, _ := strconv.ParseInt(vars["commentID"], 10, 64)
+    userID := r.Context().Value(middleware.UserIDKey).(int64)
+
+    var req struct {
+        Content string `json:"content"`
+    }
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        http.Error(w, "Invalid request", http.StatusBadRequest)
+        return
+    }
+
+    if err := h.Repo.Update(commentID, userID, req.Content); err != nil {
+        http.Error(w, "Update failed", http.StatusInternalServerError)
+        return
+    }
+    w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *CommentHandler) Delete(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    commentID, err := strconv.ParseInt(vars["commentID"], 10, 64)
-    if err != nil {
-        http.Error(w, "invalid comment id", http.StatusBadRequest)
+    commentID, _ := strconv.ParseInt(vars["commentID"], 10, 64)
+    userID := r.Context().Value(middleware.UserIDKey).(int64)
+
+    if err := h.Repo.SoftDelete(commentID, userID); err != nil {
+        http.Error(w, "Delete failed", http.StatusInternalServerError)
         return
     }
-
-    if err := h.Repo.SoftDelete(commentID); err != nil {
-        http.Error(w, "failed to delete comment", http.StatusInternalServerError)
-        return
-    }
-
     w.WriteHeader(http.StatusNoContent)
 }
