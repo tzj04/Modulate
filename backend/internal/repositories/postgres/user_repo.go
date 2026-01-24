@@ -2,8 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
-
 	"modulate/backend/internal/models"
 )
 
@@ -11,26 +9,42 @@ type UserRepo struct {
 	DB *sql.DB
 }
 
-func (r *UserRepo) GetByID(id int64) (*models.User, error) {
-	var u models.User
-	err := r.DB.QueryRow(`
-		SELECT id, username, password, label, is_deleted, created_at
-		FROM users
-		WHERE id = $1
-	`, id).Scan(
-		&u.ID,
-		&u.Username,
-		&u.Password,
-		&u.Label,
-		&u.IsDeleted,
-		&u.CreatedAt,
-	)
+func (r *UserRepo) Create(user *models.User) error {
+	query := `
+		INSERT INTO users (username, password, label, created_at)
+		VALUES ($1, $2, $3, NOW())
+		RETURNING id, created_at`
+	
+	return r.DB.QueryRow(query, user.Username, user.Password, user.Label).
+		Scan(&user.ID, &user.CreatedAt)
+}
 
-	if err == sql.ErrNoRows {
-		return nil, errors.New("user not found")
-	}
+func (r *UserRepo) GetByUsername(username string) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, username, password, label, is_deleted, created_at 
+              FROM users WHERE username = $1 AND is_deleted = false`
+	
+	err := r.DB.QueryRow(query, username).Scan(
+		&user.ID, &user.Username, &user.Password, 
+		&user.Label, &user.IsDeleted, &user.CreatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
-	return &u, nil
+	return user, nil
+}
+
+func (r *UserRepo) GetByID(id int64) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, username, label, is_deleted, created_at 
+              FROM users WHERE id = $1`
+	
+	err := r.DB.QueryRow(query, id).Scan(
+		&user.ID, 
+		&user.Username, 
+		&user.Label, 
+		&user.IsDeleted, 
+		&user.CreatedAt,
+	)
+	return user, err
 }
