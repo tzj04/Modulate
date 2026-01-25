@@ -103,3 +103,8 @@ To test the core logic of the application, follow these steps:
     - Log in as a different user and attempt to edit/delete a post you don't own. The backend will return a `403 Forbidden` because it verifies the `userID` from the JWT context.
 
 ---
+
+## AI Declaration
+
+1. Some of the styling in the css was done by GPT to speed up the process
+2. When there were parts I wasn't too sure about, I clarified with GPT to make sure my logic was sound
