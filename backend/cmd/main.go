@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+    "fmt"
 
 	"github.com/joho/godotenv"
 
@@ -17,6 +18,8 @@ import (
 )
 
 func main() {
+    fmt.Println("GOPROD: App is starting...")
+    
 	// Load the .env file
     if err := godotenv.Load(); err != nil {
         log.Println("No .env file found, using system default envs")
