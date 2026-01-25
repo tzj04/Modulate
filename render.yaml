@@ -6,7 +6,7 @@ services:
     rootDir: backend
     buildCommand: go build -o main ./cmd/main.go
     startCommand: ./main
-    envVar:
+    envVars:
       - key: DATABASE_URL
         sync: false
       - key: SERVER_PORT
@@ -22,7 +22,7 @@ services:
     runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
         value: https://modulate-backend.onrender.com
