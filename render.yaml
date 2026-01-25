@@ -16,10 +16,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: ALLOWED_ORIGIN
-        fromStack:
-          type: static
-          name: modulate-frontend
-          property: url
+        value: https://modulate-frontend.onrender.com
 
   # React Frontend
   - type: web
@@ -30,10 +27,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
-        fromStack:
-          type: web
-          name: modulate-backend
-          property: url
+        value: https://modulate-backend.onrender.com
       - key: VITE_APP_NAME
         value: Modulate
 
