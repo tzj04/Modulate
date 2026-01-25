@@ -33,7 +33,11 @@ export async function client<T>(
 
   let response = await fetch(`${BASE_URL}${endpoint}`, config);
 
-  if (response.status === 401 && !endpoint.includes("/auth/refresh")) {
+  if (
+    response.status === 401 &&
+    !endpoint.includes("/auth/refresh") &&
+    !endpoint.includes("/auth/login")
+  ) {
     try {
       // Attempt to get a new access token
       const refreshResponse = await fetch(`${BASE_URL}/auth/refresh`, {
