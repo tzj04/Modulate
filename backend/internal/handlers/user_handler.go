@@ -76,13 +76,13 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
     user, err := h.Repo.GetByUsername(req.Username)
     if err != nil {
-        http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+        sendJSONError(w, "Invalid username or password", http.StatusUnauthorized)
         return
     }
 
     // Compare bcrypt hash
     if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-        http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+        sendJSONError(w, "Invalid username or password", http.StatusUnauthorized)
         return
     }
 
@@ -117,14 +117,16 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
     }
 
     // Send Refresh Token in an HttpOnly Cookie
+    isProd := os.Getenv("GO_ENV") == "production"
+
     http.SetCookie(w, &http.Cookie{
         Name:     "refresh_token",
         Value:    rtString,
         Expires:  time.Now().Add(time.Hour * 24 * 7),
         HttpOnly: true, 
-        Secure:   false, // Set to true in production with HTTPS
+        Secure:   isProd,               
         Path:     "/",
-        SameSite: http.SameSiteLaxMode,
+        SameSite: http.SameSiteNoneMode,
     })
 
     // Clean sensitive data
@@ -186,12 +188,22 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+    isProd := os.Getenv("GO_ENV") == "production"
+
     http.SetCookie(w, &http.Cookie{
         Name:     "refresh_token",
-        Value:    "",
+        Value:    "",              
         Expires:  time.Unix(0, 0),
         HttpOnly: true,
+        Secure:   isProd,
+        SameSite: http.SameSiteNoneMode,
         Path:     "/",
     })
     w.WriteHeader(http.StatusOK)
+}
+
+func sendJSONError(w http.ResponseWriter, message string, code int) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(code)
+    json.NewEncoder(w).Encode(map[string]string{"message": message})
 }

@@ -74,12 +74,21 @@ export async function client<T>(
   }
 
   if (!response.ok) {
+    const contentType = response.headers.get("content-type");
+    let errorMessage = "An unexpected error occurred";
+
     try {
-      const errorData = await response.json();
-      return Promise.reject(new Error(errorData.message || "Request failed"));
-    } catch {
-      return Promise.reject(new Error("An unexpected error occurred"));
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || "Request failed";
+      } else {
+        errorMessage = await response.text();
+      }
+    } catch (e) {
+      errorMessage = response.statusText || errorMessage;
     }
+
+    return Promise.reject(new Error(errorMessage));
   }
 
   if (response.status === 204) return {} as T;
