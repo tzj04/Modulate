@@ -17,8 +17,9 @@ services:
         value: https://modulate-frontend.onrender.com
 
   # React Frontend
-  - type: static_site
+  - type: web
     name: modulate-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishPath: dist
