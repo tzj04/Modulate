@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+	"os"
 
 	_ "github.com/lib/pq"
 )
@@ -40,4 +41,20 @@ func Close() error {
 		return DB.Close()
 	}
 	return nil
+}
+
+func RunMigrations() error {
+    path := "internal/db/migrations/init.sql"
+    
+    c, err := os.ReadFile(path)
+    if err != nil {
+        return fmt.Errorf("could not read migration file: %w", err)
+    }
+
+    _, err = DB.Exec(string(c))
+    if err != nil {
+        return fmt.Errorf("could not execute migration: %w", err)
+    }
+
+    return nil
 }

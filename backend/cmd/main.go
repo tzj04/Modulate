@@ -33,6 +33,11 @@ func main() {
     if err != nil {
         log.Fatalf("Error initializing database: %v", err)
     }
+    err = db.RunMigrations()
+    if err != nil {
+        log.Printf("Migration notice: %v", err) 
+    }
+
     defer db.Close()
 
     // Initialize repositories

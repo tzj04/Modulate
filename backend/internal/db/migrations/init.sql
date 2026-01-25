@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- =========================
 -- users table
 -- =========================
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL, -- store hashed passwords only
@@ -15,7 +15,7 @@ CREATE TABLE users (
 -- =========================
 -- modules table (acts like subreddits)
 -- =========================
-CREATE TABLE modules (
+CREATE TABLE IF NOT EXISTS modules (
     id BIGSERIAL PRIMARY KEY,
     code TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE modules (
 -- =========================
 -- posts table
 -- =========================
-CREATE TABLE posts (
+CREATE TABLE IF NOT EXISTS posts (
     id BIGSERIAL PRIMARY KEY,
     module_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE posts (
 -- =========================
 -- comments table (hierarchical)
 -- =========================
-CREATE TABLE comments (
+CREATE TABLE IF NOT EXISTS comments (
     id BIGSERIAL PRIMARY KEY,
     post_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
@@ -83,9 +83,9 @@ CREATE TABLE comments (
 -- =========================
 -- Indexes for performance
 -- =========================
-CREATE INDEX idx_posts_module_id ON posts(module_id);
-CREATE INDEX idx_posts_user_id ON posts(user_id);
+CREATE INDEX IF NOT EXISTS idx_posts_module_id ON posts(module_id);
+CREATE INDEX IF NOT EXISTS idx_posts_user_id ON posts(user_id);
 
-CREATE INDEX idx_comments_post_id ON comments(post_id);
-CREATE INDEX idx_comments_parent_id ON comments(parent_comment_id);
-CREATE INDEX idx_comments_user_id ON comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_post_id ON comments(post_id);
+CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments(parent_comment_id);
+CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
