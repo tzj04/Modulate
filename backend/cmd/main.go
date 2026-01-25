@@ -43,6 +43,7 @@ func main() {
 
     defer db.Close()
 
+    fmt.Println("Initialising Repos...")
     // Initialize repositories
     moduleRepo := &postgres.ModuleRepo{DB: db.DB}
     postRepo := &postgres.PostRepo{DB: db.DB}
@@ -55,6 +56,7 @@ func main() {
     commentHandler := handlers.NewCommentHandler(commentRepo)
     userHandler := handlers.NewUserHandler(userRepo)
 
+    fmt.Println("Initialising Handlers...")
     // Initialize router
     router := routes.NewRouter(
         moduleHandler, 
@@ -64,6 +66,7 @@ func main() {
     )
     handler := middleware.CORSMiddleware(router)
 
+    fmt.Println("Starting Server...")
     // Start server
     port := os.Getenv("PORT")
     if port == "" {
