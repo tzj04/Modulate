@@ -21,7 +21,6 @@ func NewRouter(
     // Global middleware
     router.Use(middleware.LoggingMiddleware)
     router.Use(middleware.RecoveryMiddleware)
-    router.Use(middleware.CORSMiddleware)
 
     // --------------------
     // Public (read-only)
