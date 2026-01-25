@@ -22,7 +22,7 @@ services:
           property: url
 
   # React Frontend
-  - type: static
+  - type: static_site
     name: modulate-frontend
     runtime: node
     rootDir: frontend
