@@ -6,7 +6,7 @@ export async function client<T>(
   endpoint: string,
   { body, ...customConfig }: CustomConfig = {},
 ): Promise<T> {
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const BASE_URL = import.meta.env.VITE_API_BASE_UR || "http://localhost:8080";
   let token = localStorage.getItem("token");
 
   const headers: Record<string, string> = {
