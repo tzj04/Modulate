@@ -62,8 +62,13 @@ func main() {
     handler := middleware.CORSMiddleware(router)
 
     // Start server
-    log.Println("Server running on :8080")
-    if err := http.ListenAndServe(":8080", handler); err != nil {
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080" // Fallback for local development
+    }
+
+    log.Printf("Server running on port %s", port)
+    if err := http.ListenAndServe(":"+port, handler); err != nil {
         log.Fatal(err)
     }
 }
