@@ -22,9 +22,9 @@ services:
           property: url
 
   # React Frontend
-  - type: static_site
+  - type: web
     name: modulate-frontend
-    runtime: node
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     publishPath: dist
